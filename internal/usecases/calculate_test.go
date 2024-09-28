@@ -18,10 +18,37 @@ func TestCalculatePacksUseCase_Execute(t *testing.T) {
 		expectedError error
 	}{
 		{
-			name:          "Simple case",
+			name:          "Simple case 1",
 			packSizes:     []domain.PackSize{250, 500, 1000, 2000, 5000},
 			orderSize:     1,
 			expectedPacks: []domain.PackResult{{Size: 250, Count: 1}},
+			expectedError: nil,
+		},
+		{
+			name:          "Simple case 2",
+			packSizes:     []domain.PackSize{250, 500, 1000, 2000, 5000},
+			orderSize:     250,
+			expectedPacks: []domain.PackResult{{Size: 250, Count: 1}},
+			expectedError: nil,
+		},
+		{
+			name:          "Simple case 3",
+			packSizes:     []domain.PackSize{250, 500, 1000, 2000, 5000},
+			orderSize:     251,
+			expectedPacks: []domain.PackResult{{Size: 500, Count: 1}},
+			expectedError: nil,
+		},
+		{
+			name:          "Simple case 4",
+			packSizes:     []domain.PackSize{250, 500, 1000, 2000, 5000},
+			orderSize:     501,
+			expectedPacks: []domain.PackResult{{Size: 500, Count: 1}, {Size: 250, Count: 1}},
+			expectedError: nil,
+		}, {
+			name:          "Simple case 5",
+			packSizes:     []domain.PackSize{250, 500, 1000, 2000, 5000},
+			orderSize:     12001,
+			expectedPacks: []domain.PackResult{{Size: 5000, Count: 2}, {Size: 2000, Count: 1}, {Size: 250, Count: 1}},
 			expectedError: nil,
 		},
 		{
@@ -56,7 +83,7 @@ func TestCalculatePacksUseCase_Execute(t *testing.T) {
 			name:          "No pack sizes available",
 			packSizes:     []domain.PackSize{},
 			orderSize:     1000,
-			expectedPacks: []domain.PackResult{},
+			expectedPacks: nil,
 			expectedError: fmt.Errorf("no pack sizes available"),
 		},
 	}
