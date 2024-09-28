@@ -1,4 +1,3 @@
-// cmd/api/main.go
 package main
 
 import (
@@ -13,10 +12,8 @@ import (
 func main() {
 	config := config.NewConfig()
 
-	// Initialize the repository with pack sizes from config
 	repo := repository.NewMemoryPackSizeRepository(config.PackSizes)
 
-	// Initialize the use case with the repository
 	useCase := usecases.NewCalculatePacksUseCase(repo)
 
 	handler := httphandler.NewPackCalculatorHandler(useCase)
