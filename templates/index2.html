@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pack Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 1rem;
+        }
+        input[type="number"] {
+            padding: 0.5rem;
+            margin-right: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 60%;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 30%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result, #history {
+            margin-top: 1rem;
+            text-align: left;
+        }
+        .result-item, .history-item {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .error {
+            color: red;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 200px;
+            margin-top: 20px;
+        }
+        .bar {
+            flex: 1;
+            margin: 0 2px;
+            background-color: #3498db;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            color: white;
+            transition: height 0.5s ease-in-out;
+        }
+        @media (max-width: 600px) {
+            .container {
+                width: 90%;
+                padding: 1rem;
+            }
+            input[type="number"], button {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Pack Calculator</h1>
+    <form id="calculateForm">
+        <input type="number" name="orderSize" required placeholder="Enter order size">
+        <button type="submit">Calculate</button>
+    </form>
+    <div class="loader" id="loader"></div>
+    <div id="result"></div>
+    <div id="chart" class="bar-chart"></div>
+    <h3>Calculation History</h3>
+    <div id="history"></div>
+</div>
+
+<script>
+    function validateInput(input) {
+        if (input <= 0) {
+            throw new Error("Order size must be a positive number");
+        }
+        if (!Number.isInteger(Number(input))) {
+            throw new Error("Order size must be a whole number");
+        }
+    }
+
+    function saveCalculation(orderSize, result) {
+        let history = JSON.parse(localStorage.getItem('calculationHistory')) || [];
+        history.unshift({ orderSize, result, timestamp: new Date().toISOString() });
+        history = history.slice(0, 5);  // Keep only the last 5 calculations
+        localStorage.setItem('calculationHistory', JSON.stringify(history));
+    }
+
+    function displayHistory() {
+        const history = JSON.parse(localStorage.getItem('calculationHistory')) || [];
+        const historyHtml = history.map(item => `
+                <div class="history-item">
+                    <div>Order Size: ${item.orderSize}</div>
+                    <div>Result: ${item.result.map(r => `${r.Count}x${r.Size}`).join(', ')}</div>
+                    <div>Time: ${new Date(item.timestamp).toLocaleString()}</div>
+                </div>
+            `).join('');
+        document.getElementById('history').innerHTML = historyHtml;
+    }
+
+    function displayChart(result) {
+        const maxCount = Math.max(...result.map(item => item.Count));
+        const chartHtml = result.map(item => `
+                <div class="bar" style="height: ${(item.Count / maxCount) * 100}%;">
+                    <div>${item.Count}</div>
+                    <div>${item.Size}</div>
+                </div>
+            `).join('');
+        document.getElementById('chart').innerHTML = chartHtml;
+    }
+
+    document.getElementById('calculateForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const orderSize = e.target.elements.orderSize.value;
+        const loader = document.getElementById('loader');
+        const resultDiv = document.getElementById('result');
+
+        try {
+            validateInput(orderSize);
+            loader.style.display = 'block';
+            resultDiv.innerHTML = '';
+
+            const response = await fetch(`/api/calculate?orderSize=${orderSize}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const result = await response.json();
+
+            const resultHtml = result.map(item =>
+                `<div class="result-item">${item.Count} x ${item.Size} items</div>`
+            ).join('');
+            resultDiv.innerHTML = `<h3>Results:</h3>${resultHtml}`;
+
+            saveCalculation(orderSize, result);
+            displayHistory();
+            displayChart(result);
+        } catch (error) {
+            console.error('Error:', error);
+            resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+        } finally {
+            loader.style.display = 'none';
+        }
+    });
+
+    // Display history on page load
+    displayHistory();
+</script>
+</body>
+</html>

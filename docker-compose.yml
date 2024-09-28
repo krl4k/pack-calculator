@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  pack-calculator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - PACK_SIZES=500,1000,2000,5000
