@@ -25,6 +25,8 @@ We approached this challenge by:
 - Configurable pack sizes via environment variables 🔧
 - Docker support for easy deployment 🐳
 - Comprehensive Makefile for streamlined development 🛠️
+- Google Cloud Run deployment for cloud scalability ☁️
+- CI/CD(configured on the GCP side when merging into main) pipeline for automated testing and deployment 🚀
 
 ## 📋 Prerequisites
 
