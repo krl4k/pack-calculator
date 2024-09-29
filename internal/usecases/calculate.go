@@ -27,11 +27,6 @@ func (uc *CalculatePacksUseCase) Execute(orderSize int) ([]domain.PackResult, er
 		return nil, domain.PackSizesNotFoundError
 	}
 
-	// Sort pack sizes in ascending order
-	sort.Slice(packSizes, func(i, j int) bool {
-		return packSizes[i] < packSizes[j]
-	})
-
 	result := uc.calculatePacks(orderSize, packSizes)
 
 	var packResults []domain.PackResult
@@ -48,60 +43,47 @@ func (uc *CalculatePacksUseCase) Execute(orderSize int) ([]domain.PackResult, er
 	return packResults, nil
 }
 
-func (uc *CalculatePacksUseCase) calculatePacks(orderSize int, packSizes []domain.PackSize) map[domain.PackSize]int {
-	result := make(map[domain.PackSize]int)
-	remaining := orderSize
+func (uc *CalculatePacksUseCase) calculatePacks(items int, packSizes []domain.PackSize) map[domain.PackSize]int {
+	// Sort pack sizes in ascending order
+	sort.Slice(packSizes, func(i, j int) bool {
+		return packSizes[i] < packSizes[j]
+	})
 
-	// Find the smallest pack size that can fulfill the order
-	var smallestSufficientPack domain.PackSize
-	for _, size := range packSizes {
-		if size >= domain.PackSize(orderSize) {
-			smallestSufficientPack = size
-			break
+	necessaryPacks := make(map[domain.PackSize]int)
+	lastUsedPackIndex := len(packSizes) - 1
+	diff := 0
+
+	for lastUsedPackIndex > 0 {
+		if items-int(packSizes[lastUsedPackIndex]) >= 0 {
+			necessaryPacks[packSizes[lastUsedPackIndex]]++
+			items -= int(packSizes[lastUsedPackIndex])
+		} else {
+			if _, exists := necessaryPacks[packSizes[lastUsedPackIndex]]; exists {
+				diff = int(packSizes[lastUsedPackIndex]) - items
+				if int(packSizes[lastUsedPackIndex-1]) > diff {
+					necessaryPacks[packSizes[lastUsedPackIndex]]++
+					items -= int(packSizes[lastUsedPackIndex])
+					break
+				}
+			}
+			lastUsedPackIndex--
 		}
 	}
 
-	if smallestSufficientPack > 0 {
-		// Check if using the smallest sufficient pack results in less waste
-		wasteWithSmallestSufficient := int(smallestSufficientPack) - orderSize
-		wasteWithSmallerPacks := uc.calculateWasteWithSmallerPacks(orderSize, packSizes)
-
-		if wasteWithSmallestSufficient <= wasteWithSmallerPacks {
-			result[smallestSufficientPack] = 1
-			return result
-		}
-	}
-
-	// Use combination of smaller packs
-	for i := len(packSizes) - 1; i >= 0 && remaining > 0; i-- {
-		if remaining >= int(packSizes[i]) {
-			count := remaining / int(packSizes[i])
-			result[packSizes[i]] = count
-			remaining -= count * int(packSizes[i])
-		}
-	}
-
-	// If there are still remaining items, add one more of the smallest pack that can cover it
-	if remaining > 0 {
+	if items > 0 {
 		for _, size := range packSizes {
-			if size >= domain.PackSize(remaining) {
-				result[size]++
+			if int(size) >= items {
+				necessaryPacks[size]++
+				items -= int(size)
 				break
 			}
 		}
 	}
 
-	return result
-}
+	for items > 0 {
+		necessaryPacks[packSizes[lastUsedPackIndex]]++
+		items -= int(packSizes[lastUsedPackIndex])
+	}
 
-func (uc *CalculatePacksUseCase) calculateWasteWithSmallerPacks(orderSize int, packSizes []domain.PackSize) int {
-	remaining := orderSize
-	for i := len(packSizes) - 1; i >= 0 && remaining > 0; i-- {
-		count := remaining / int(packSizes[i])
-		remaining -= count * int(packSizes[i])
-	}
-	if remaining > 0 {
-		remaining = int(packSizes[0]) - remaining
-	}
-	return remaining
+	return necessaryPacks
 }

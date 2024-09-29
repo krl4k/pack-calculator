@@ -44,7 +44,8 @@ func TestCalculatePacksUseCase_Execute(t *testing.T) {
 			orderSize:     501,
 			expectedPacks: []domain.PackResult{{Size: 500, Count: 1}, {Size: 250, Count: 1}},
 			expectedError: nil,
-		}, {
+		},
+		{
 			name:          "Simple case 5",
 			packSizes:     []domain.PackSize{250, 500, 1000, 2000, 5000},
 			orderSize:     12001,
@@ -52,17 +53,17 @@ func TestCalculatePacksUseCase_Execute(t *testing.T) {
 			expectedError: nil,
 		},
 		{
+			name:          "Simple case 6",
+			packSizes:     []domain.PackSize{250, 500, 1000, 2000, 5000},
+			orderSize:     9999,
+			expectedPacks: []domain.PackResult{{Size: 5000, Count: 2}},
+			expectedError: nil,
+		},
+		{
 			name:          "Exact match",
 			packSizes:     []domain.PackSize{250, 500, 1000, 2000, 5000},
 			orderSize:     500,
 			expectedPacks: []domain.PackResult{{Size: 500, Count: 1}},
-			expectedError: nil,
-		},
-		{
-			name:          "Multiple packs",
-			packSizes:     []domain.PackSize{250, 500, 1000, 2000, 5000},
-			orderSize:     12001,
-			expectedPacks: []domain.PackResult{{Size: 5000, Count: 2}, {Size: 2000, Count: 1}, {Size: 250, Count: 1}},
 			expectedError: nil,
 		},
 		{
