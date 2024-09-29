@@ -9,10 +9,15 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o pack-calculator ./cmd/main
 
 FROM alpine:latest
 
-WORKDIR /root/
+WORKDIR /app
 
 COPY --from=builder /app/pack-calculator .
-COPY templates/index.html ./templates/index.html
+COPY --from=builder /app/templates/index.html ./templates/index.html
+
+# Create a non-root user
+RUN addgroup -S norootgroup && adduser -S noroot -G norootgroup
+RUN chown -R noroot:norootgroup /app
+USER noroot
 
 EXPOSE 8080
 
