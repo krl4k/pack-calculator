@@ -27,6 +27,7 @@ We approached this challenge by:
 - Comprehensive Makefile for streamlined development 🛠️
 - Google Cloud Run deployment for cloud scalability ☁️
 - CI/CD(configured on the GCP side when merging into main) pipeline for automated testing and deployment 🚀
+- Graceful shutdown for clean resource management 🛑
 
 ## 📋 Prerequisites
 
