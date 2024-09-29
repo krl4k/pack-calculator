@@ -5,7 +5,7 @@ import (
 	"calculate_product_packs/internal/usecases/mocks"
 	"fmt"
 	"github.com/golang/mock/gomock"
-	"reflect"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -100,13 +100,9 @@ func TestCalculatePacksUseCase_Execute(t *testing.T) {
 
 			result, err := useCase.Execute(tt.orderSize)
 
-			if !reflect.DeepEqual(err, tt.expectedError) {
-				t.Errorf("Expected error %v, but got %v", tt.expectedError, err)
-			}
+			assert.Equal(t, tt.expectedError, err)
 
-			if !reflect.DeepEqual(result, tt.expectedPacks) {
-				t.Errorf("Expected packs %v, but got %v", tt.expectedPacks, result)
-			}
+			assert.Equal(t, tt.expectedPacks, result)
 		})
 	}
 }
@@ -127,9 +123,7 @@ func TestCalculatePacksUseCase_Execute_SortsPackSizes(t *testing.T) {
 	}
 
 	expected := []domain.PackResult{{Size: 5000, Count: 2}, {Size: 2000, Count: 1}, {Size: 250, Count: 1}}
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf("Expected packs %v, but got %v", expected, result)
-	}
+	assert.Equal(t, expected, result)
 }
 
 func TestCalculatePacksUseCase_Execute_EmptyPackSizes(t *testing.T) {
@@ -143,17 +137,9 @@ func TestCalculatePacksUseCase_Execute_EmptyPackSizes(t *testing.T) {
 
 	result, err := useCase.Execute(1000)
 
-	if err == nil {
-		t.Error("Expected an error for empty pack sizes, but got nil")
-	}
-
-	if err.Error() != "no pack sizes available" {
-		t.Errorf("Expected error message 'no pack sizes available', but got '%v'", err.Error())
-	}
-
-	if len(result) != 0 {
-		t.Errorf("Expected empty result for empty pack sizes, but got %v", result)
-	}
+	assert.Error(t, err)
+	assert.Equal(t, domain.PackSizesNotFoundError, err)
+	assert.Empty(t, result)
 }
 
 func TestCalculatePacksUseCase_Execute_InvalidInputs(t *testing.T) {
@@ -180,13 +166,8 @@ func TestCalculatePacksUseCase_Execute_InvalidInputs(t *testing.T) {
 
 			result, err := useCase.Execute(tt.orderSize)
 
-			if err == nil {
-				t.Error("Expected an error for invalid input, but got nil")
-			}
-
-			if len(result) != 0 {
-				t.Errorf("Expected empty result for invalid input, but got %v", result)
-			}
+			assert.Error(t, err)
+			assert.Empty(t, result)
 		})
 	}
 }

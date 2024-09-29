@@ -1,18 +1,24 @@
 package http
 
 import (
-	"calculate_product_packs/internal/usecases"
+	"calculate_product_packs/internal/domain"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 )
 
-type PackCalculatorHandler struct {
-	useCase *usecases.CalculatePacksUseCase
+//go:generate mockgen -destination=mocks/mock_pack_calculator.go -package=mocks calculate_product_packs/internal/interfaces/http PackCalculator
+type PackCalculator interface {
+	Execute(orderSize int) ([]domain.PackResult, error)
 }
 
-func NewPackCalculatorHandler(useCase *usecases.CalculatePacksUseCase) *PackCalculatorHandler {
-	return &PackCalculatorHandler{useCase: useCase}
+type PackCalculatorHandler struct {
+	packCalculator PackCalculator
+}
+
+func NewPackCalculatorHandler(packCalculator PackCalculator) *PackCalculatorHandler {
+	return &PackCalculatorHandler{packCalculator: packCalculator}
 }
 
 func (h *PackCalculatorHandler) CalculatePacks(w http.ResponseWriter, r *http.Request) {
@@ -22,9 +28,16 @@ func (h *PackCalculatorHandler) CalculatePacks(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	result, err := h.useCase.Execute(orderSize)
+	result, err := h.packCalculator.Execute(orderSize)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		switch {
+		case errors.Is(err, domain.OrderSizeMustBeGreaterThanZeroError):
+			http.Error(w, "Order size must be greater than 0", http.StatusBadRequest)
+		case errors.Is(err, domain.PackSizesNotFoundError):
+			http.Error(w, "No pack sizes available", http.StatusNotFound)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 

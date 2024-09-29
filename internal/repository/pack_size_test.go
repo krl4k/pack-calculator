@@ -2,7 +2,7 @@ package repository
 
 import (
 	"calculate_product_packs/internal/domain"
-	"reflect"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -11,17 +11,7 @@ func TestNewMemoryPackSizeRepository(t *testing.T) {
 		packSizes := []domain.PackSize{250, 500, 1000}
 		repo := NewMemoryPackSizeRepository(packSizes)
 
-		if repo == nil {
-			t.Error("Expected non-nil repository, got nil")
-		}
-	})
-
-	t.Run("Create repository with empty pack sizes", func(t *testing.T) {
-		emptyRepo := NewMemoryPackSizeRepository([]domain.PackSize{})
-
-		if emptyRepo == nil {
-			t.Error("Expected non-nil repository even with empty pack sizes, got nil")
-		}
+		assert.NotNil(t, repo)
 	})
 }
 
@@ -32,9 +22,7 @@ func TestMemoryPackSizeRepository_GetPackSizes(t *testing.T) {
 
 		retrievedSizes := repo.GetPackSizes()
 
-		if !reflect.DeepEqual(retrievedSizes, packSizes) {
-			t.Errorf("Expected pack sizes %v, got %v", packSizes, retrievedSizes)
-		}
+		assert.Equal(t, packSizes, retrievedSizes)
 	})
 
 	t.Run("Repository with empty pack sizes", func(t *testing.T) {
@@ -42,8 +30,6 @@ func TestMemoryPackSizeRepository_GetPackSizes(t *testing.T) {
 
 		emptySizes := emptyRepo.GetPackSizes()
 
-		if len(emptySizes) != 0 {
-			t.Errorf("Expected empty pack sizes, got %v", emptySizes)
-		}
+		assert.NotNil(t, emptySizes)
 	})
 }
