@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"calculate_product_packs/internal/domain"
-	"fmt"
 	"sort"
 )
 
@@ -20,11 +19,12 @@ func NewCalculatePacksUseCase(repo PackSizeRepository) *CalculatePacksUseCase {
 
 func (uc *CalculatePacksUseCase) Execute(orderSize int) ([]domain.PackResult, error) {
 	if orderSize <= 0 {
-		return nil, fmt.Errorf("order size must be greater than 0")
+		return nil, domain.OrderSizeMustBeGreaterThanZeroError
 	}
+
 	packSizes := uc.repo.GetPackSizes()
 	if len(packSizes) == 0 {
-		return nil, fmt.Errorf("no pack sizes available")
+		return nil, domain.PackSizesNotFoundError
 	}
 
 	// Sort pack sizes in ascending order
