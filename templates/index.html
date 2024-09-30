@@ -34,6 +34,8 @@
             margin-right: 0.5rem;
             border: 1px solid #ddd;
             border-radius: 4px;
+            width: calc(100% - 1rem);
+            margin-bottom: 0.5rem;
         }
         button {
             padding: 0.5rem 1rem;
@@ -57,6 +59,14 @@
         .error {
             color: red;
         }
+        .tooltip {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+            font-style: italic;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
@@ -72,6 +82,10 @@
     <div id="packSizes"></div>
     <form id="updatePackSizesForm">
         <input type="text" name="packSizes" required placeholder="Enter pack sizes (comma-separated)">
+        <div class="tooltip">
+            Format: Enter sizes as comma-separated positive integers (e.g., 250, 500, 1000).<br>
+            All sizes must be greater than zero.
+        </div>
         <button type="submit">Update Pack Sizes</button>
     </form>
 </div>
@@ -114,6 +128,11 @@
         e.preventDefault();
         const packSizesInput = e.target.elements.packSizes.value;
         const packSizes = packSizesInput.split(',').map(size => parseInt(size.trim())).filter(size => !isNaN(size));
+
+        if (packSizes.some(size => size <= 0)) {
+            alert('All pack sizes must be positive integers.');
+            return;
+        }
 
         try {
             const response = await fetch('/api/pack-sizes', {
