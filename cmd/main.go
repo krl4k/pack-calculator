@@ -19,9 +19,10 @@ func main() {
 
 	repo := repository.NewMemoryPackSizeRepository(config.PackSizes)
 
-	useCase := usecases.NewCalculatePacksUseCase(repo)
+	calculatePacksUseCase := usecases.NewCalculatePacksUseCase(repo)
+	packSizesUseCase := usecases.NewPackSizesUseCase(repo)
 
-	handler := httphandler.NewPackCalculatorHandler(useCase)
+	handler := httphandler.NewPackCalculatorHandler(calculatePacksUseCase, packSizesUseCase)
 	router := httphandler.NewRouter(handler)
 
 	srv := &http.Server{

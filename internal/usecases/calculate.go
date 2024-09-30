@@ -5,15 +5,11 @@ import (
 	"sort"
 )
 
-type PackSizeRepository interface {
-	GetPackSizes() []domain.PackSize
-}
-
 type CalculatePacksUseCase struct {
-	repo PackSizeRepository
+	repo domain.PackSizeRepository
 }
 
-func NewCalculatePacksUseCase(repo PackSizeRepository) *CalculatePacksUseCase {
+func NewCalculatePacksUseCase(repo domain.PackSizeRepository) *CalculatePacksUseCase {
 	return &CalculatePacksUseCase{repo: repo}
 }
 

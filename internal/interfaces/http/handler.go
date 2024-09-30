@@ -13,12 +13,24 @@ type PackCalculator interface {
 	Execute(orderSize int) ([]domain.PackResult, error)
 }
 
-type PackCalculatorHandler struct {
-	packCalculator PackCalculator
+//go:generate mockgen -destination=mocks/mock_pack_sizer.go -package=mocks calculate_product_packs/internal/interfaces/http PackSizer
+type PackSizer interface {
+	UpdatePackSizes(sizes []domain.PackSize) error
+	GetPackSizes() []domain.PackSize
 }
 
-func NewPackCalculatorHandler(packCalculator PackCalculator) *PackCalculatorHandler {
-	return &PackCalculatorHandler{packCalculator: packCalculator}
+type PackCalculatorHandler struct {
+	packCalculator   PackCalculator
+	packSizesUseCase PackSizer
+}
+
+func NewPackCalculatorHandler(
+	packCalculator PackCalculator,
+	packSizesUseCase PackSizer) *PackCalculatorHandler {
+	return &PackCalculatorHandler{
+		packCalculator:   packCalculator,
+		packSizesUseCase: packSizesUseCase,
+	}
 }
 
 func (h *PackCalculatorHandler) CalculatePacks(w http.ResponseWriter, r *http.Request) {
@@ -43,4 +55,44 @@ func (h *PackCalculatorHandler) CalculatePacks(w http.ResponseWriter, r *http.Re
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(result)
+}
+
+func (h *PackCalculatorHandler) UpdatePackSizes(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var sizes []domain.PackSize
+	err := json.NewDecoder(r.Body).Decode(&sizes)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	err = h.packSizesUseCase.UpdatePackSizes(sizes)
+	if err != nil {
+		switch err {
+		case domain.EmptyPackSizesError, domain.InvalidPackSizeError:
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		default:
+			http.Error(w, "Failed to update pack sizes", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Pack sizes updated successfully"))
+}
+
+func (h *PackCalculatorHandler) GetPackSizes(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	sizes := h.packSizesUseCase.GetPackSizes()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(sizes)
 }
