@@ -10,7 +10,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
         }
@@ -20,18 +20,22 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             text-align: center;
+            max-width: 600px;
+            width: 100%;
         }
-        h1 {
+        h1, h2 {
             color: #333;
         }
         form {
             margin-bottom: 1rem;
         }
-        input[type="number"] {
+        input[type="number"], input[type="text"] {
             padding: 0.5rem;
             margin-right: 0.5rem;
             border: 1px solid #ddd;
             border-radius: 4px;
+            width: calc(100% - 1rem);
+            margin-bottom: 0.5rem;
         }
         button {
             padding: 0.5rem 1rem;
@@ -40,16 +44,28 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            margin-top: 0.5rem;
         }
         button:hover {
             background-color: #0056b3;
         }
-        #result {
+        #result, #packSizes {
             margin-top: 1rem;
             text-align: left;
         }
         .result-item {
             margin-bottom: 0.5rem;
+        }
+        .error {
+            color: red;
+        }
+        .tooltip {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+            font-style: italic;
+            text-align: left;
         }
     </style>
 </head>
@@ -61,9 +77,34 @@
         <button type="submit">Calculate</button>
     </form>
     <div id="result"></div>
+
+    <h2>Pack Sizes</h2>
+    <div id="packSizes"></div>
+    <form id="updatePackSizesForm">
+        <input type="text" name="packSizes" required placeholder="Enter pack sizes (comma-separated)">
+        <div class="tooltip">
+            Format: Enter sizes as comma-separated positive integers (e.g., 250, 500, 1000).<br>
+            All sizes must be greater than zero.
+        </div>
+        <button type="submit">Update Pack Sizes</button>
+    </form>
 </div>
 
 <script>
+    async function fetchPackSizes() {
+        try {
+            const response = await fetch('/api/pack-sizes');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const packSizes = await response.json();
+            document.getElementById('packSizes').innerHTML = `Current pack sizes: ${packSizes.join(', ')}`;
+        } catch (error) {
+            console.error('Error fetching pack sizes:', error);
+            document.getElementById('packSizes').innerHTML = `<div class="error">Error fetching pack sizes: ${error.message}</div>`;
+        }
+    }
+
     document.getElementById('calculateForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const orderSize = e.target.elements.orderSize.value;
@@ -82,6 +123,38 @@
             document.getElementById('result').innerHTML = `<div class="error">Error: ${error.message}</div>`;
         }
     });
+
+    document.getElementById('updatePackSizesForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const packSizesInput = e.target.elements.packSizes.value;
+        const packSizes = packSizesInput.split(',').map(size => parseInt(size.trim())).filter(size => !isNaN(size));
+
+        if (packSizes.some(size => size <= 0)) {
+            alert('All pack sizes must be positive integers.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/pack-sizes', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(packSizes),
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            await fetchPackSizes();
+            alert('Pack sizes updated successfully');
+        } catch (error) {
+            console.error('Error updating pack sizes:', error);
+            alert(`Error updating pack sizes: ${error.message}`);
+        }
+    });
+
+    // Fetch pack sizes on page load
+    fetchPackSizes();
 </script>
 </body>
 </html>

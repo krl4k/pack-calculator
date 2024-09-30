@@ -18,8 +18,9 @@ func TestPackCalculatorHandler_CalculatePacks(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockCalculator := mocks.NewMockPackCalculator(ctrl)
+	mockSizesUseCase := mocks.NewMockPackSizer(ctrl)
 
-	handler := NewPackCalculatorHandler(mockCalculator)
+	handler := NewPackCalculatorHandler(mockCalculator, mockSizesUseCase)
 
 	tests := []struct {
 		name           string
@@ -103,7 +104,8 @@ func TestPackCalculatorHandler_CalculatePacks_JSONResponse(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockCalculator := mocks.NewMockPackCalculator(ctrl)
-	handler := NewPackCalculatorHandler(mockCalculator)
+	mockSizesUseCase := mocks.NewMockPackSizer(ctrl)
+	handler := NewPackCalculatorHandler(mockCalculator, mockSizesUseCase)
 
 	expectedResult := []domain.PackResult{
 		{Size: 500, Count: 1},

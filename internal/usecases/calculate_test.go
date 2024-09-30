@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"calculate_product_packs/internal/domain"
-	"calculate_product_packs/internal/usecases/mocks"
+	"calculate_product_packs/internal/domain/mocks"
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -113,6 +113,7 @@ func TestCalculatePacksUseCase_Execute_SortsPackSizes(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockRepo := mocks.NewMockPackSizeRepository(ctrl)
+
 	mockRepo.EXPECT().GetPackSizes().Return([]domain.PackSize{250, 1000, 500, 5000, 2000})
 
 	useCase := NewCalculatePacksUseCase(mockRepo)
