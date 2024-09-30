@@ -25,6 +25,7 @@ func (uc *CalculatePacksUseCase) Execute(orderSize int) ([]domain.PackResult, er
 
 	result := uc.calculatePacks(orderSize, packSizes)
 
+	// Convert map to slice of PackResult
 	var packResults []domain.PackResult
 	for size, count := range result {
 		if count > 0 {
@@ -51,10 +52,12 @@ func (uc *CalculatePacksUseCase) calculatePacks(items int, packSizes []domain.Pa
 
 	for lastUsedPackIndex > 0 {
 		if items-int(packSizes[lastUsedPackIndex]) >= 0 {
+			// Add pack if it fits completely
 			necessaryPacks[packSizes[lastUsedPackIndex]]++
 			items -= int(packSizes[lastUsedPackIndex])
 		} else {
 			if _, exists := necessaryPacks[packSizes[lastUsedPackIndex]]; exists {
+				// Check if adding one more of the current pack size is better than using a smaller pack
 				diff = int(packSizes[lastUsedPackIndex]) - items
 				if int(packSizes[lastUsedPackIndex-1]) > diff {
 					necessaryPacks[packSizes[lastUsedPackIndex]]++
@@ -66,6 +69,7 @@ func (uc *CalculatePacksUseCase) calculatePacks(items int, packSizes []domain.Pa
 		}
 	}
 
+	// Handle remaining items
 	if items > 0 {
 		for _, size := range packSizes {
 			if int(size) >= items {
@@ -76,6 +80,7 @@ func (uc *CalculatePacksUseCase) calculatePacks(items int, packSizes []domain.Pa
 		}
 	}
 
+	// Fill any remaining space with the smallest pack size
 	for items > 0 {
 		necessaryPacks[packSizes[lastUsedPackIndex]]++
 		items -= int(packSizes[lastUsedPackIndex])

@@ -8,25 +8,25 @@ It's designed with clean architecture principles, ensuring scalability and maint
 We approached this challenge by:
 1. Implementing a greedy algorithm to calculate the optimal pack combination.
 2. Designing the system using clean architecture principles, separating concerns into distinct layers:
-    - Domain layer: Core business logic and entities
-    - Use Case layer: Application-specific business rules
-    - Interface layer: Adapters for external agency (e.g., HTTP handlers)
-    - Infrastructure layer: Frameworks and tools (e.g., database, external services)
+   - Domain layer: Core business logic and entities
+   - Use Case layer: Application-specific business rules
+   - Interface layer: Adapters for external agency (e.g., HTTP handlers)
+   - Infrastructure layer: Frameworks and tools (e.g., database, external services)
 3. Creating a RESTful API for easy integration with other systems.
 4. Developing a simple web interface for user interaction.
 5. Containerizing the application for easy deployment and scaling.
-6. Allowing customization of pack sizes through environment variables for flexibility.
+6. Allowing customization of pack sizes through environment variables and API endpoints for flexibility.
 
 ## 🚀 Features
 
 - Calculate optimal pack combinations for any order size 🧮
 - RESTful API for system integration 🔌
 - User-friendly web interface 🖥️
-- Configurable pack sizes via environment variables 🔧
+- Configurable pack sizes via environment variables and API 🔧
 - Docker support for easy deployment 🐳
 - Comprehensive Makefile for streamlined development 🛠️
 - Google Cloud Run deployment for cloud scalability ☁️
-- CI/CD(configured on the GCP side when merging into main) pipeline for automated testing and deployment 🚀
+- CI/CD (configured on the GCP side when merging into main) pipeline for automated testing and deployment 🚀
 - Graceful shutdown for clean resource management 🛑
 
 ## 📋 Prerequisites
@@ -47,7 +47,6 @@ We approached this challenge by:
    ```
    go mod download
    ```
-
 
 ## 🔧 Configuration
 
@@ -111,8 +110,9 @@ make stop
 
 ## 🌐 API Usage
 
-The application exposes a RESTful API endpoint for calculating pack sizes:
+The application exposes the following RESTful API endpoints:
 
+### Calculate Optimal Packs
 - Endpoint: `/api/calculate`
 - Method: GET
 - Query Parameter: `orderSize` (integer)
@@ -130,6 +130,38 @@ Response:
 ]
 ```
 
+### Get Current Pack Sizes
+- Endpoint: `/api/pack-sizes`
+- Method: GET
+
+Example:
+```
+GET /api/pack-sizes
+```
+
+Response:
+```json
+[250, 500, 1000, 2000, 5000]
+```
+
+### Update Pack Sizes
+- Endpoint: `/api/pack-sizes`
+- Method: PUT
+- Body: JSON array of integers
+
+Example:
+```
+PUT /api/pack-sizes
+Content-Type: application/json
+
+[250, 500, 1000, 2000, 5000]
+```
+
+Response:
+```
+Pack sizes updated successfully
+```
+
 ## 🚀 Deployment
 
 To deploy the application to Google Cloud Run:
@@ -140,3 +172,8 @@ make deploy-gcp
 
 This command builds the Docker image, pushes it to Google Container Registry, and deploys it to Cloud Run.
 
+Remember to set the `PACK_SIZES` environment variable in your Cloud Run configuration if you want to use custom pack sizes.
+
+
+## 🖥️ Frontend
+![img.png](img.png)

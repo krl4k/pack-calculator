@@ -8,11 +8,15 @@ import (
 	"strconv"
 )
 
+// PackCalculator interface for generating mock implementations
+//
 //go:generate mockgen -destination=mocks/mock_pack_calculator.go -package=mocks calculate_product_packs/internal/interfaces/http PackCalculator
 type PackCalculator interface {
 	Execute(orderSize int) ([]domain.PackResult, error)
 }
 
+// PackSizer interface for generating mock implementations
+//
 //go:generate mockgen -destination=mocks/mock_pack_sizer.go -package=mocks calculate_product_packs/internal/interfaces/http PackSizer
 type PackSizer interface {
 	UpdatePackSizes(sizes []domain.PackSize) error
@@ -34,6 +38,7 @@ func NewPackCalculatorHandler(
 }
 
 func (h *PackCalculatorHandler) CalculatePacks(w http.ResponseWriter, r *http.Request) {
+	// Parse order size from query parameter
 	orderSize, err := strconv.Atoi(r.URL.Query().Get("orderSize"))
 	if err != nil {
 		http.Error(w, "Invalid order size", http.StatusBadRequest)
@@ -42,6 +47,7 @@ func (h *PackCalculatorHandler) CalculatePacks(w http.ResponseWriter, r *http.Re
 
 	result, err := h.packCalculator.Execute(orderSize)
 	if err != nil {
+		// Handle specific errors with appropriate HTTP status codes
 		switch {
 		case errors.Is(err, domain.OrderSizeMustBeGreaterThanZeroError):
 			http.Error(w, "Order size must be greater than 0", http.StatusBadRequest)
@@ -72,6 +78,7 @@ func (h *PackCalculatorHandler) UpdatePackSizes(w http.ResponseWriter, r *http.R
 
 	err = h.packSizesUseCase.UpdatePackSizes(sizes)
 	if err != nil {
+		// Handle specific errors with appropriate HTTP status codes
 		switch err {
 		case domain.EmptyPackSizesError, domain.InvalidPackSizeError:
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -93,6 +100,7 @@ func (h *PackCalculatorHandler) GetPackSizes(w http.ResponseWriter, r *http.Requ
 
 	sizes := h.packSizesUseCase.GetPackSizes()
 
+	// Return sizes as JSON
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(sizes)
 }
