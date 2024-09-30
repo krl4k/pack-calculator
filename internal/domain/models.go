@@ -13,6 +13,8 @@ type PackResult struct {
 // PackSizeRepository defines the interface for pack size storage operations.
 // Using an interface here supports clean architecture principles and facilitates
 // easier testing by allowing mock implementations in unit tests.
+//
+//go:generate mockgen -destination=mocks/mock_pack_size_repository.go -package=mocks calculate_product_packs/internal/domain PackSizeRepository
 type PackSizeRepository interface {
 	GetPackSizes() []PackSize
 	UpdatePackSizes(sizes []PackSize) error
